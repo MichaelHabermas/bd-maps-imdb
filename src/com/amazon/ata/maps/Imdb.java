@@ -1,14 +1,16 @@
 package com.amazon.ata.maps;
 
-import java.util.Collections;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Stores the relationships between movies and actors, allowing releasing a new movie
  * with all actors in the cast, adding a single actor to an existing (or new) movie,
- * unreleasing a movie completely, and querying actors by movie and vice versa.
+ * un-releasing a movie completely, and querying actors by movie and vice versa.
  */
 public class Imdb {
+
+    private final Map<Movie, Set<Actor>> movies = new HashMap<>();
+    private final Map<Actor, Set<Movie>> actors = new HashMap<>();
 
     /**
      * Adds the new movie to the set of movies that an actor has appeared in.
@@ -19,7 +21,17 @@ public class Imdb {
      * @param actors a set of actors that appear in the movie
      */
     public void releaseMovie(Movie movie, Set<Actor> actors) {
-        //TODO
+        movies.put(movie, actors);
+
+        for (Actor actor : actors) {
+            Set<Movie> movs = this.actors.get(actor);
+            if (movs == null) {
+                movs = new HashSet<>();
+            }
+
+            movs.add(movie);
+            this.actors.put(actor, movs);
+        }
     }
 
     /**
@@ -31,22 +43,36 @@ public class Imdb {
      *         to begin with
      */
     public boolean removeMovie(Movie movie) {
-        // TODO: replace
-        return false;
+        if (!movies.containsKey(movie)) {
+            return false;
+        }
+
+        movies.remove(movie);
+        for (Map.Entry<Actor, Set<Movie>> ent : actors.entrySet()) {
+            ent.getValue().remove(movie);
+        }
+        return true;
     }
 
     /**
      * Adds a new movie to the set of movies that an actor has appeared in.
-     * If the movie already exists in the database, will add the actor
-     * if they haven't been added already. If the movie doesn't yet exist
-     * in the database, this will add the movie with the actor as the only
-     * credit.
+     * If the movie already exists in the database, will add the actor if they haven't been added already.
+     * If the movie doesn't yet exist in the database, this will add the movie with the actor as the only credit.
      *
      * @param movie the movie to add to the actors set of movies
      * @param actor the actor that appears in this movie
      */
     public void tagActorInMovie(Movie movie, Actor actor) {
-        //TODO
+        Set<Actor> acts = movies.containsKey(movie) ? movies.get(movie) : new HashSet<>();
+        acts.add(actor);
+        movies.put(movie, acts);
+
+        Set<Movie> movs = actors.containsKey(actor) ? actors.get(actor) : new HashSet<>();
+        movs.add(movie);
+        actors.put(actor, movs);
+
+//        movies.computeIfAbsent(movie, k -> new HashSet<>()).add(actor);
+//        actors.computeIfAbsent(actor, k -> new HashSet<>()).add(movie);
     }
 
     /**
@@ -57,8 +83,11 @@ public class Imdb {
      * @return the set of actors who are credited in the passed in movie
      */
     public Set<Actor> getActorsInMovie(Movie movie) {
-        // TODO: replace
-        return Collections.EMPTY_SET;
+        Set<Actor> actors = movies.get(movie);
+        if (actors == null) {
+            throw new IllegalArgumentException("Ain't no sunshine when she's gone.");
+        }
+        return actors;
     }
 
     /**
@@ -69,8 +98,8 @@ public class Imdb {
      * @return the set of movies that the passed in actor has appeared in
      */
     public Set<Movie> getMoviesForActor(Actor actor) {
-        // TODO: replace
-        return Collections.EMPTY_SET;
+        Set<Movie> movs = actors.get(actor);
+        return movs == null ? Collections.emptySet() : movs;
     }
 
     /**
@@ -79,8 +108,7 @@ public class Imdb {
      * @return a set of actors that IMDB has as appeared in movies
      */
     public Set<Actor> getAllActorsInIMDB() {
-        // TODO: replace
-        return Collections.EMPTY_SET;
+        return actors.keySet();
     }
 
     /**
@@ -93,7 +121,10 @@ public class Imdb {
      *         any actor has appeared in any movie
      */
     public int getTotalNumCredits() {
-        // TODO: replace
-        return 0;
+        int count = 0;
+        for (Set<Actor> actors : movies.values()) {
+            count += actors.size();
+        }
+        return count;
     }
 }

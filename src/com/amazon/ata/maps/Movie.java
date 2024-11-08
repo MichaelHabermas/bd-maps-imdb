@@ -23,8 +23,26 @@ public class Movie {
         this.yearReleased = yearReleased;
     }
 
+    public String getName() {
+        return name;
+    }
+
     @Override
     public String toString() {
         return "Name: " + name + "\n" + "Director: " + director + "\n" + "Release date: " + yearReleased;
+    }
+
+    @Override
+    public int hashCode() {
+        return getName().hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null || !obj.getClass().equals(Movie.class)) {
+            return false;
+        }
+        Movie movie = (Movie) obj;
+        return movie.getName().equals(getName());
     }
 }
